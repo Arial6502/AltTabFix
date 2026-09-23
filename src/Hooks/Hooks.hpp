@@ -9,7 +9,7 @@ namespace Hooks {
 	inline void Install() {
 
 		auto& Trampoline = SKSE::GetTrampoline();
-		Trampoline.create(76);
+		Trampoline.create(56);
 
 		if (Config::ConfigManager::AltTabFix.bEnable)
 			AltTabFix::Install();

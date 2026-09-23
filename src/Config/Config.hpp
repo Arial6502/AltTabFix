@@ -5,7 +5,6 @@ namespace Config {
 
     struct _AltTabFix {
         bool bEnable = true;
-        uint32_t iFramesToBlock = 2;
     };
 
     struct _FocusTheft {

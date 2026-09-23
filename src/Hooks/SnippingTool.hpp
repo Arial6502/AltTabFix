@@ -17,11 +17,6 @@ namespace Hooks::SnippingTool {
 
 					if (winDown && shiftDown && a_wParam == 'S') {
 
-						if (Config::ConfigManager::AltTabFix.bEnable) {
-							AltTabFix::ResetInput();
-							AltTabFix::BlockFrameCount = 2;
-						}
-
 						// Directly launch Windows Snip & Sketch
 						ShellExecuteW(0, L"open", L"ms-screenclip:", NULL, NULL, SW_SHOWNORMAL);
 

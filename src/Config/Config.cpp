@@ -15,7 +15,6 @@ namespace {
     // Loaders
     void LoadAltTabFix(CSimpleIniA& ini, Config::_AltTabFix& cfg) {
         cfg.bEnable = ToBool(ini.GetValue("AltTabFix", "bEnable", cfg.bEnable ? "True" : "False"), cfg.bEnable);
-        cfg.iFramesToBlock = static_cast<uint32_t>(std::stoul(ini.GetValue("AltTabFix", "iFramesToBlock", std::to_string(cfg.iFramesToBlock).c_str())));
     }
 
     void LoadFocusTheft(CSimpleIniA& ini, Config::_FocusTheft& cfg) {
@@ -44,7 +43,6 @@ namespace Config {
 
             // write default values
             INI.SetValue("AltTabFix", "bEnable", AltTabFix.bEnable ? "True" : "False");
-            INI.SetValue("AltTabFix", "iFramesToBlock", std::to_string(AltTabFix.iFramesToBlock).c_str());
             INI.SetValue("FocusTheft", "bEnable", FocusTheft.bEnable ? "True" : "False");
             INI.SetValue("Misc", "bEnableSnippingToolPassthrough", Misc.bEnableSnippingToolForward ? "True" : "False");
 
@@ -57,7 +55,7 @@ namespace Config {
         LoadMisc(INI, Misc);
 
         logger::info("Config Loaded");
-        logger::info("AltTabFix: bEnable:{} iFramesToBlock:{}", AltTabFix.bEnable, AltTabFix.iFramesToBlock);
+        logger::info("AltTabFix: bEnable:{}", AltTabFix.bEnable);
         logger::info("FocusTheft: bEnable:{}", FocusTheft.bEnable);
         logger::info("Misc: bEnableSnippingToolPassthrough:{}", Misc.bEnableSnippingToolForward);
 

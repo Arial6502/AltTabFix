@@ -4,29 +4,16 @@
 
 #include "Util/Logger/Logger.hpp"
 
-SKSEPluginLoad(const LoadInterface * a_skse) {
+SKSEPluginLoad(const SKSE::LoadInterface * a_skse) {
 
 	//You never know...
 	REL::Module::reset();
 
-	Init(a_skse);
+	SKSE::Init(a_skse);
 	logger::Initialize();
-	logger::SetLevel(spdlog::level::trace);
+	logger::SetLevel(spdlog::level::info);
 	Config::ConfigManager::Initialize();
 	Hooks::Install();
-
-	if (!GetMessagingInterface()->RegisterListener([](MessagingInterface::Message* message) {
-		switch (message->type) {
-			case MessagingInterface::kPostLoadGame: {
-				if (Config::ConfigManager::AltTabFix.bEnable) {
-					Hooks::AltTabFix::ResetInput();
-				}
-			}
-			default: {}
-		}
-	})) {
-		SKSE::stl::report_and_fail("Could not register Messaging Interface");
-	}
 
 	return true;
 }

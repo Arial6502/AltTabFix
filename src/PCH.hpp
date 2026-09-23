@@ -111,8 +111,5 @@ using namespace std::literals;
 using namespace REL::literals;
 
 namespace logger = SKSE::log;
-using namespace SKSE;
-using namespace RE;
-using namespace REL;
 
 
