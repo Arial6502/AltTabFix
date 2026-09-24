@@ -16,6 +16,17 @@ namespace Hooks::AltTabFix {
 		REL::safe_fill(jmp.address(), 0x90, 6);
 	}
 
+
+	static void FlushDInputBuffer(REX::W32::IDirectInputDevice8A* a_device) {
+		//Read them out to a temp buffer to work around other mods not following MS's spec. smh.
+		//Btw Use Community shaders. Its better anyways.
+		std::array<REX::W32::DIDEVICEOBJECTDATA, 16> events;
+		std::uint32_t count;
+		do {
+			count = static_cast<std::uint32_t>(events.size());
+		} while (a_device->GetDeviceData(gDInputEventSize, events.data(), &count, 0) >= 0 && count == events.size());
+	}
+
 	//The keyboard uses buffered DInput so the game only ever gets key events instead of the actual key state.
 	//If the device got unacquired (Acquire doesn't return S_FALSE) or the buffer overflows this will result in missed events
 	//causing curState to be wrong. So we clear it and let SyncHeldButtons send the key ups.
@@ -40,9 +51,10 @@ namespace Hooks::AltTabFix {
 		else {
 			unacquired = false;
 			if (acquired == kAlreadyAcquired) {
-				//Null buffer with a count of 0 only checks for an overflow
+				//Same here. Pass a real buffer so anyone badly hooking getdevicedata doesn't get jumpscared with a nullptr.
+				REX::W32::DIDEVICEOBJECTDATA unused{};
 				std::uint32_t count = 0;
-				if (device->GetDeviceData(gDInputEventSize, nullptr, &count, 0) != kBufferOverflow) {
+				if (device->GetDeviceData(gDInputEventSize, &unused, &count, 0) != kBufferOverflow) {
 					return;
 				}
 			}
@@ -63,9 +75,7 @@ namespace Hooks::AltTabFix {
 		static void thunk(RE::BSWin32KeyboardDevice* a_this) {
 
 			if (const auto device = reinterpret_cast<REX::W32::IDirectInputDevice8A*>(a_this->GetRuntimeData().dInputDevice)) {
-				//Null buffer with an INFINITE count -> flushes everything according to ms docs.
-				std::uint32_t count = std::numeric_limits<std::uint32_t>::max();
-				device->GetDeviceData(gDInputEventSize, nullptr, &count, 0);
+				FlushDInputBuffer(device);
 			}
 
 			func(a_this);
@@ -82,7 +92,14 @@ namespace Hooks::AltTabFix {
 	static void SyncHeldButtons(std::vector<std::uint32_t>& a_held, RE::INPUT_DEVICE a_type, RE::BSInputDevice* a_device, std::uint32_t a_firstEvent) {
 
 		const auto queue = RE::BSInputEventQueue::GetSingleton();
-		const std::uint32_t lastEvent = queue->buttonEventCount;
+		const std::uint32_t lastEvent = std::min<std::uint32_t>(queue->buttonEventCount, RE::BSInputEventQueue::MAX_BUTTON_EVENTS);
+
+		//Another mod can reset the queue mid-poll. 
+		//Adding events now could land on slots that are still linked, so leave it alone and try again at the next update.
+		if (lastEvent < a_firstEvent) {
+			return;
+		}
+
 		const auto contains = [](const std::vector<std::uint32_t>& a_ids, std::uint32_t a_id) {
 			return std::ranges::find(a_ids, a_id) != a_ids.end();
 		};
