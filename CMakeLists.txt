@@ -7,7 +7,7 @@ cmake_policy(VERSION 3.21...3.31)
 
 project(
 	AltTabFix
-	VERSION 2.0.0.0
+	VERSION 2.0.1.0
 	DESCRIPTION "SKSE plugin that fixes stuck inputs after window loss & focus plus some other fixes"
 	LANGUAGES CXX
 )
