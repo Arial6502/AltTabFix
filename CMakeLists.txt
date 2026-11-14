@@ -30,6 +30,7 @@ option(PL_BUILD_DISTRIBUTION "Construct a distribution folder after each build" 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE BOOL "Export compile_commands.json")
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
 add_compile_definitions(_ENABLE_EXTENDED_ALIGNED_STORAGE)
 
 # Check if MSVC is the compiler

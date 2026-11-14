@@ -53,6 +53,11 @@ namespace Hooks::SnippingTool {
 
 		Hooks::stl::write_call<Win32_RegisterClassA, 6>(REL::RelocationID(75591, 77226, NULL), REL::VariantOffset(0x8E, 0x15C, NULL));
 
+		//BSWin32KeyboardDevice::Initialize: SetCooperativeLevel(hwnd, DISCL_EXCLUSIVE | DISCL_FOREGROUND | DISCL_NOWINKEY).
+		//NOWINKEY swallows the Win key so GetAsyncKeyState never sees it. This used to only work because SetCooperativeLevel
+		//failed with FocusTheft on (GetActiveWindow returned null). Drop NOWINKEY: mov r8d, 0x15 -> 0x05.
+		REL::safe_write(REL::RelocationID(67471, 68781, NULL).address() + 0x57, static_cast<std::uint8_t>(0x05));
+
 	}
 
 }

@@ -44,7 +44,7 @@ namespace Config {
             // write default values
             INI.SetValue("AltTabFix", "bEnable", AltTabFix.bEnable ? "True" : "False");
             INI.SetValue("FocusTheft", "bEnable", FocusTheft.bEnable ? "True" : "False");
-            INI.SetValue("Misc", "bEnableSnippingToolPassthrough", Misc.bEnableSnippingToolForward ? "True" : "False");
+            INI.SetValue("Misc", "bEnableSnippingToolForward", Misc.bEnableSnippingToolForward ? "True" : "False");
 
             INI.SaveFile(fileName.c_str());
         }
