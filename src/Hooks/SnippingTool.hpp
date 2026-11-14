@@ -3,60 +3,38 @@
 
 namespace Hooks::SnippingTool {
 
-	struct WndProcHandler {
+	//The previous WNDPROC method worked unreliably due mods (this one included) being able to mess with the flags given to windows.
+	//Just grab the keystate from the the keyboard device directly instead.
+	struct Keyboard_Poll {
 
-		static LRESULT thunk(HWND a_hwnd, UINT a_msg, WPARAM a_wParam, LPARAM a_lParam) {
+		static constexpr std::size_t funcIndex = 0x2;
 
-			switch (a_msg) {
+		static void thunk(RE::BSWin32KeyboardDevice* a_this, float a_timeDelta) {
 
-				// "Fixes" The game preventing usage of the snipping tool shortcut if it currently has kb focus.
-				case WM_SYSKEYDOWN:
-				{
-					const bool winDown = (GetAsyncKeyState(VK_LWIN) & 0x8000) || (GetAsyncKeyState(VK_RWIN) & 0x8000);
-					const bool shiftDown = (GetAsyncKeyState(VK_SHIFT) & 0x8000);
+			func(a_this, a_timeDelta);
 
-					if (winDown && shiftDown && a_wParam == 'S') {
+			const auto& data = a_this->GetRuntimeData();
 
-						// Directly launch Windows Snip & Sketch
-						ShellExecuteW(0, L"open", L"ms-screenclip:", NULL, NULL, SW_SHOWNORMAL);
+			const auto down = [&](REX::W32::DIK a_key) {
+				return (data.curState[a_key] & 0x80) != 0;
+			};
 
-						return 0;
-					}
+			const bool sPressed = down(REX::W32::DIK_S) && !(data.prevState[REX::W32::DIK_S] & 0x80);
 
-					break;
-
-				}
+			if (sPressed && (down(REX::W32::DIK_LWIN) || down(REX::W32::DIK_RWIN)) && (down(REX::W32::DIK_LSHIFT) || down(REX::W32::DIK_RSHIFT))) {
+				//logger::info("Launch Snipping Tool");
+				ShellExecuteW(nullptr, L"open", L"ms-screenclip:", nullptr, nullptr, SW_SHOWNORMAL);
 			}
-
-			return func(a_hwnd, a_msg, a_wParam, a_lParam);
 		}
 
-		FUNCTYPE_CALL func;
-	};
+		FUNCTYPE_VFUNC func;
 
-	struct Win32_RegisterClassA {
-
-		static WORD thunk(WNDCLASSA* a_wndClass) {
-
-			WndProcHandler::func = reinterpret_cast<uintptr_t>(a_wndClass->lpfnWndProc);
-			a_wndClass->lpfnWndProc = &WndProcHandler::thunk;
-
-			return func(a_wndClass);
-		}
-
-		FUNCTYPE_CALL func;
 	};
 
 	inline void Install() {
 
 		logger::info("Installing \"SnippingTool Passthrough Fix\" Hooks...");
-
-		Hooks::stl::write_call<Win32_RegisterClassA, 6>(REL::RelocationID(75591, 77226, NULL), REL::VariantOffset(0x8E, 0x15C, NULL));
-
-		//BSWin32KeyboardDevice::Initialize: SetCooperativeLevel(hwnd, DISCL_EXCLUSIVE | DISCL_FOREGROUND | DISCL_NOWINKEY).
-		//NOWINKEY swallows the Win key so GetAsyncKeyState never sees it. This used to only work because SetCooperativeLevel
-		//failed with FocusTheft on (GetActiveWindow returned null). Drop NOWINKEY: mov r8d, 0x15 -> 0x05.
-		REL::safe_write(REL::RelocationID(67471, 68781, NULL).address() + 0x57, static_cast<std::uint8_t>(0x05));
+		Hooks::stl::write_vfunc<RE::BSWin32KeyboardDevice, Keyboard_Poll>();
 
 	}
 
