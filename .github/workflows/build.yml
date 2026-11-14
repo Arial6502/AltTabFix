@@ -22,7 +22,7 @@ concurrency:
   cancel-in-progress: true
 jobs:
   build:
-    runs-on: windows-2025
+    runs-on: windows-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -34,33 +34,8 @@ jobs:
         with:
           arch: 'x64'
 
-      # Cache vcpkg dependencies
-      - name: Cache vcpkg
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/AppData/Local/vcpkg
-            vcpkg_installed
-          key: vcpkg-${{ runner.os }}-${{ hashFiles('vcpkg.json') }}
-          restore-keys: |
-            vcpkg-${{ runner.os }}-
-
-      # Cache CMake build directory
-      - name: Cache CMake build
-        uses: actions/cache@v4
-        with:
-          path: build
-          key: cmake-build-${{ runner.os }}-${{ hashFiles('CMakeLists.txt', 'cmake/**', 'CMakePresets.json') }}-${{ hashFiles('vcpkg.json') }}
-          restore-keys: |
-            cmake-build-${{ runner.os }}-${{ hashFiles('CMakeLists.txt', 'cmake/**', 'CMakePresets.json') }}-
-            cmake-build-${{ runner.os }}-
-
       - name: Setup vcpkg
-        uses: lukka/run-vcpkg@v11.5
-        with:
-          vcpkgJsonGlob: vcpkg.json
-        env:
-          VCPKG_BINARY_SOURCES: 'clear;files,~/AppData/Local/vcpkg,readwrite'
+        uses: lukka/run-vcpkg@v11
 
       # First build attempt
       - name: Build (First Attempt)
